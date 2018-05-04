@@ -11,9 +11,9 @@ defmodule Consul.Kv do
 
   @kv "kv"
 
-  @spec fetch(binary | [binary], Keyword.t) :: Endpoint.response
-  def fetch(key, opts \\ []) do
-    List.flatten([@kv, key]) |> req_get(opts)
+  @spec fetch(binary | [binary], Keyword.t, Keyword.t) :: Endpoint.response
+  def fetch(key, opts \\ [], http_opts \\ []) do
+    List.flatten([@kv, key]) |> req_get(opts, [], http_opts)
   end
 
   @spec fetch!(binary | [binary], Keyword.t) :: Response.t | no_return
@@ -58,6 +58,26 @@ defmodule Consul.Kv do
         raise(Consul.ResponseError, response)
       result ->
         result
+    end
+  end
+
+  @spec delete(binary | [binary], Keyword.t) :: Endpoint.response
+  def delete(key, opts \\ []) do
+    case List.flatten([@kv, key]) |> build_url(opts) |> req_delete() do
+      {:ok, %{body: body}} ->
+        body
+      error ->
+        error
+    end
+  end
+
+  @spec delete!(binary | [binary], Keyword.t) :: Response.t | no_return
+  def delete!(key, opts \\ []) do
+    case delete(key, opts) do
+      {:ok, value} ->
+        value
+      {:error, response} ->
+        raise(Consul.ResponseError, response)
     end
   end
 end
